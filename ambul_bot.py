@@ -66,7 +66,7 @@ def main():
         sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
                   ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
                   ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)]
-        ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)]
+        
         all_articles = ambul_bot.news_api.get_everything(sources=sources,
                                                          from_param=str(to_pst_time.date()),
                                                          to=str(to_pst_time.date()),
