@@ -56,9 +56,10 @@ def main():
 
     # fetch news
     if ambul_bot.news_api:
-        x = random.randint(0, len(ambul_bot.news_sources))
-        y = random.randint(0, len(ambul_bot.news_sources))
-        sources = ambul_bot.news_sources[x] + ',' + ambul_bot.news_sources[y]
+        sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))]
         all_articles = ambul_bot.news_api.get_everything(sources=sources,
                                                          from_param=str(to_pst_time.date()),
                                                          to=str(to_pst_time.date()),
