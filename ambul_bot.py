@@ -1,24 +1,23 @@
-#!/usr/bin/env python
-import logging
-from logging.handlers import RotatingFileHandler
-import sys
-from datetime import datetime
-import pytz
-import tweepy
-import random
-from newsapi import NewsApiClient
-from utils import get_config
-
 """
 NewsBot uses twitter and newsapi
 """
 
-global logger
-# initialize logging
-logger = logging.getLogger("Rotating Log")
+# !/usr/bin/env python
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
+from datetime import datetime
+import random
+import pytz
+import tweepy
+from newsapi import NewsApiClient
+from utils import get_config
 
 
-class NewsBot(object):
+class NewsBot():
+    """
+    NewsBot uses twitter and newsapi
+    """
 
     def __init__(self):
         """
@@ -36,23 +35,42 @@ class NewsBot(object):
         try:
             self.twitter_api.verify_credentials()
         except ValueError:
-            logger.error("Error while authenticating to twitter")
+            LOGGER.error("Error while authenticating to twitter")
             self.twitter_api = None
 
         try:
             self.news_api = NewsApiClient(self.config_data['news']['api_key'])
             self.news_sources = self.config_data['news']['sources'].split(',')
         except ValueError:
-            logger.error("Error while authenticating to news api")
+            LOGGER.error("Error while authenticating to news api")
             self.news_api = None
+
+    def get_twitter_api(self):
+        """ getter for twitter api """
+        return self.twitter_api
+
+    def get_news_api(self):
+        """ getter for news api """
+        return self.news_api
+
+    def get_news_sources(self):
+        """ getter for news sources """
+        return self.news_sources
+
+
+global LOGGER
+# initialize logging
+LOGGER = logging.getLogger("Rotating Log")
 
 
 def main():
-    logger.setLevel(logging.DEBUG)
+    """ Starts here """
+
+    LOGGER.setLevel(logging.DEBUG)
 
     # add a rotating handler
     handler = RotatingFileHandler('ambul_bot.log', maxBytes=536870912, backupCount=5)
-    logger.addHandler(handler)
+    LOGGER.addHandler(handler)
 
     ambul_bot = NewsBot()
 
@@ -63,10 +81,10 @@ def main():
 
     # fetch news
     if ambul_bot.news_api:
-        sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
-                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
-                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)]
-        
+        sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources) - 1)] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources) - 1)] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources) - 1)]
+
         all_articles = ambul_bot.news_api.get_everything(sources=sources,
                                                          from_param=str(to_pst_time.date()),
                                                          to=str(to_pst_time.date()),
@@ -74,21 +92,20 @@ def main():
                                                          sort_by='relevancy',
                                                          page=1)
     else:
-        logger.error("Error while accessing news api, will try next time.")
+        LOGGER.error("Error while accessing news api, will try next time.")
         sys.exit(1)
 
     # update status by using article_url in the articles list
     for article in all_articles['articles']:
         if ambul_bot.twitter_api:
             try:
-                logger.debug(article['url'])
+                LOGGER.debug(article['url'])
                 ambul_bot.twitter_api.update_status(article['url'])
             except tweepy.TweepError:
-                # debug
-                # print(article['url'])
+                # not the ideal way to deal with it, ignoring and moving forward for now.
                 continue
         else:
-            logger.warning("Error accessing twitter API")
+            LOGGER.warning("Error accessing twitter API")
 
 
 if __name__ == "__main__":
