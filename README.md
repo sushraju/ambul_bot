@@ -1,1 +1,1 @@
-# ambul_bot
+# ambul news bot and occasional otherness: @ambulsiva
