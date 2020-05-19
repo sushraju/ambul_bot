@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-import logging.handlers
+from logging.handlers import RotatingFileHandler
 import sys
 from datetime import datetime
 import pytz
@@ -12,6 +12,10 @@ from utils import get_config
 """
 NewsBot uses twitter and newsapi
 """
+
+global logger
+# initialize logging
+logger = logging.getLogger("Rotating Log")
 
 
 class NewsBot(object):
@@ -32,21 +36,24 @@ class NewsBot(object):
         try:
             self.twitter_api.verify_credentials()
         except ValueError:
-            logging.ERROR("Error while authenticating to twitter")
+            logger.error("Error while authenticating to twitter")
             self.twitter_api = None
 
         try:
             self.news_api = NewsApiClient(self.config_data['news']['api_key'])
             self.news_sources = self.config_data['news']['sources'].split(',')
         except ValueError:
-            logging.ERROR("Error while authenticating to news api")
+            logger.error("Error while authenticating to news api")
             self.news_api = None
 
 
 def main():
+    logger.setLevel(logging.INFO)
 
-    # initialize logging
-    logging.basicConfig(filename='ambul_bot.log', level=logging.DEBUG)
+    # add a rotating handler
+    handler = RotatingFileHandler('ambul_bot.log', maxBytes=536870912, backupCount=5)
+    logger.addHandler(handler)
+
     ambul_bot = NewsBot()
 
     pst = pytz.timezone('America/Los_Angeles')
@@ -56,30 +63,32 @@ def main():
 
     # fetch news
     if ambul_bot.news_api:
-        sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))] + ',' + \
-                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))] + ',' + \
-                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))] + ',' + \
-                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources))]
+        sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
+                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)]
         all_articles = ambul_bot.news_api.get_everything(sources=sources,
                                                          from_param=str(to_pst_time.date()),
                                                          to=str(to_pst_time.date()),
                                                          language='en',
-                                                         sort_by='popularity',
+                                                         sort_by='relevancy',
                                                          page=1)
     else:
-        logging.ERROR("Error while accessing news api, will try next time.")
+        logger.error("Error while accessing news api, will try next time.")
         sys.exit(1)
 
-    # tweet by iterating the articles list
+    # update status by using article_url in the articles list
     for article in all_articles['articles']:
         if ambul_bot.twitter_api:
             try:
+                logger.debug(article['url'])
                 ambul_bot.twitter_api.update_status(article['url'])
             except tweepy.TweepError:
-                #print(article['url'])
+                # debug
+                # print(article['url'])
                 continue
         else:
-            logging.WARNING("Error accessing twitter API")
+            logger.warning("Error accessing twitter API")
 
 
 if __name__ == "__main__":
