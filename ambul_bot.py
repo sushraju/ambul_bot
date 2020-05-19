@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 import pytz
 import tweepy
+import random
 from newsapi import NewsApiClient
 from utils import get_config
 
@@ -36,7 +37,7 @@ class NewsBot(object):
 
         try:
             self.news_api = NewsApiClient(self.config_data['news']['api_key'])
-            self.news_sources = self.config_data['news']['sources']
+            self.news_sources = self.config_data['news']['sources'].split(',')
         except ValueError:
             logging.ERROR("Error while authenticating to news api")
             self.news_api = None
@@ -45,7 +46,7 @@ class NewsBot(object):
 def main():
 
     # initialize logging
-    logging.basicConfig(filename='ambul_bot.log', level=logging.INFO)
+    logging.basicConfig(filename='ambul_bot.log', level=logging.DEBUG)
     ambul_bot = NewsBot()
 
     pst = pytz.timezone('America/Los_Angeles')
@@ -55,12 +56,15 @@ def main():
 
     # fetch news
     if ambul_bot.news_api:
-        all_articles = ambul_bot.news_api.get_everything(sources=ambul_bot.news_sources,
+        x = random.randint(0, len(ambul_bot.news_sources))
+        y = random.randint(0, len(ambul_bot.news_sources))
+        sources = ambul_bot.news_sources[x] + ',' + ambul_bot.news_sources[y]
+        all_articles = ambul_bot.news_api.get_everything(sources=sources,
                                                          from_param=str(to_pst_time.date()),
                                                          to=str(to_pst_time.date()),
                                                          language='en',
                                                          sort_by='popularity',
-                                                         page=5)
+                                                         page=1)
     else:
         logging.ERROR("Error while accessing news api, will try next time.")
         sys.exit(1)
@@ -71,6 +75,7 @@ def main():
             try:
                 ambul_bot.twitter_api.update_status(article['url'])
             except tweepy.TweepError:
+                #print(article['url'])
                 continue
         else:
             logging.WARNING("Error accessing twitter API")
