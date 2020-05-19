@@ -48,7 +48,7 @@ class NewsBot(object):
 
 
 def main():
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # add a rotating handler
     handler = RotatingFileHandler('ambul_bot.log', maxBytes=536870912, backupCount=5)
@@ -65,8 +65,8 @@ def main():
     if ambul_bot.news_api:
         sources = ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
                   ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
-                  ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)] + ',' + \
                   ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)]
+        ambul_bot.news_sources[random.randint(0, len(ambul_bot.news_sources)-1)]
         all_articles = ambul_bot.news_api.get_everything(sources=sources,
                                                          from_param=str(to_pst_time.date()),
                                                          to=str(to_pst_time.date()),
