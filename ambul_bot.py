@@ -69,7 +69,7 @@ def main():
     LOGGER.setLevel(logging.DEBUG)
 
     # add a rotating handler
-    handler = RotatingFileHandler('ambul_bot.log', maxBytes=536870912, backupCount=5)
+    handler = RotatingFileHandler('ambul_bot.log', maxBytes=10485760, backupCount=5)
     LOGGER.addHandler(handler)
 
     ambul_bot = NewsBot()
